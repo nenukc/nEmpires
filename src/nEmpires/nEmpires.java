@@ -147,10 +147,7 @@ public class nEmpires
     {
         placeEmperors();
         System.out.println("Total of "+q+" Emperors can be placed on a board with "+(n*n)+" Squares");
-        /*Change 1 on Laptop*/
-        /*Checking git status and git log commands*/
-        /*push to upstream check*/
-      
+            
     }
         
 }
