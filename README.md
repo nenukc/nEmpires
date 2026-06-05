@@ -26,3 +26,7 @@ found 10:
 0000100000
 0000000100
 ```
+
+## Browser Version
+
+Open `nEmpires.html` to try the self-contained visual version.

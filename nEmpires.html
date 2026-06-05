@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nEmpires</title>
+  <style>
+    :root {
+      --ink: #1d1a16;
+      --muted: #6f6558;
+      --paper: #f6efe2;
+      --panel: #fffaf0;
+      --line: #d7c2a1;
+      --dark-square: #886b48;
+      --light-square: #dfc58d;
+      --accent: #2f7d52;
+      --accent-dark: #20583a;
+      --saffron: #ff9933;
+      --white: #ffffff;
+      --green: #138808;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(47, 125, 82, 0.12), transparent 34rem),
+        linear-gradient(135deg, #fbf4e7 0%, #efe0c5 100%);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    main {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0;
+    }
+
+    .header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 6vw, 4.8rem);
+      line-height: 0.95;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .subtitle {
+      max-width: 520px;
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-family: Arial, sans-serif;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      font-family: Arial, sans-serif;
+    }
+
+    button {
+      min-width: 150px;
+      border: 1px solid var(--accent-dark);
+      border-radius: 6px;
+      padding: 12px 18px;
+      color: #fff;
+      background: var(--accent);
+      font: 700 0.95rem Arial, sans-serif;
+      cursor: pointer;
+      transition: background 160ms ease, transform 160ms ease;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--accent-dark);
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      border-color: #a8a096;
+      color: #ece7dd;
+      background: #9a9287;
+      cursor: default;
+    }
+
+    .status {
+      min-width: 190px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: right;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 310px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .board-wrap,
+    .log-panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 250, 240, 0.76);
+      box-shadow: 0 18px 48px rgba(65, 44, 20, 0.14);
+    }
+
+    .board-wrap {
+      padding: 10px;
+    }
+
+    .board {
+      display: grid;
+      width: 100%;
+      aspect-ratio: 1;
+      overflow: hidden;
+      border-radius: 5px;
+      background: var(--light-square);
+    }
+
+    .square {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .square.light {
+      background: var(--light-square);
+    }
+
+    .square.dark {
+      background: var(--dark-square);
+    }
+
+    .emperor {
+      position: relative;
+      width: 74%;
+      height: 74%;
+      min-width: 7px;
+      min-height: 7px;
+      background:
+        radial-gradient(circle at 18% 13%, var(--saffron) 0 7%, transparent 7.6%),
+        radial-gradient(circle at 50% 7%, var(--white) 0 7%, transparent 7.6%),
+        radial-gradient(circle at 82% 13%, var(--green) 0 7%, transparent 7.6%);
+    }
+
+    .emperor::before {
+      content: "";
+      position: absolute;
+      inset: 14% 7% 22%;
+      background: #070707;
+      clip-path: polygon(0 100%, 0 48%, 15% 67%, 20% 24%, 39% 63%, 50% 0, 61% 63%, 80% 24%, 85% 67%, 100% 48%, 100% 100%);
+    }
+
+    .emperor::after {
+      content: "";
+      position: absolute;
+      left: 16%;
+      right: 16%;
+      bottom: 11%;
+      height: 15%;
+      border-radius: 999px 999px 3px 3px;
+      background: #070707;
+    }
+
+    .placing .emperor {
+      animation: settle 420ms ease both;
+    }
+
+    @keyframes settle {
+      from {
+        opacity: 0;
+        transform: translateY(-22%) scale(0.84);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .log-panel {
+      padding: 16px;
+      font-family: Arial, sans-serif;
+    }
+
+    .log-panel h2 {
+      margin: 0 0 10px;
+      font: 700 1rem Arial, sans-serif;
+    }
+
+    .log {
+      display: grid;
+      gap: 8px;
+      max-height: 640px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .log-entry {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid rgba(136, 107, 72, 0.22);
+      padding-bottom: 7px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .log-entry strong {
+      color: var(--ink);
+    }
+
+    @media (max-width: 820px) {
+      main {
+        width: min(100% - 18px, 680px);
+        padding-top: 18px;
+      }
+
+      .header,
+      .controls {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .controls {
+        justify-content: flex-start;
+      }
+
+      .status {
+        min-width: 0;
+        text-align: left;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .log {
+        max-height: 260px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="header" aria-labelledby="page-title">
+      <div>
+        <h1 id="page-title">nEmpires</h1>
+        <p class="subtitle">Place emperors so none can attack by queen or knight movement. Each run grows the board and records how much peace the board can hold.</p>
+      </div>
+      <div class="controls">
+        <button id="peace-button" type="button">Make Peace</button>
+        <div id="status" class="status">Ready for 1x1</div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="board-wrap">
+        <div id="board" class="board" aria-label="nEmpires board"></div>
+      </div>
+      <aside class="log-panel">
+        <h2>Peace Log</h2>
+        <div id="log" class="log" aria-live="polite"></div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const RUN_STAGES = [
+      { start: 1, end: 10, nextLabel: "Make Peace +" },
+      { start: 11, end: 20, nextLabel: "Make Peace ++" },
+      { start: 21, end: 30, nextLabel: "Peace Established" },
+    ];
+
+    const FULL_BOARD_COLUMNS = {
+      10: [2, 5, 8, 0, 3, 6, 9, 1, 4, 7],
+      11: [0, 3, 6, 9, 1, 4, 7, 10, 2, 5, 8],
+      12: [1, 4, 7, 10, 2, 5, 8, 11, 0, 3, 9, 6],
+      13: [0, 3, 6, 9, 12, 2, 5, 8, 11, 1, 4, 7, 10],
+      14: [0, 3, 6, 9, 12, 4, 7, 10, 13, 1, 5, 8, 2, 11],
+      15: [0, 3, 6, 9, 1, 12, 5, 2, 11, 14, 8, 4, 13, 7, 10],
+      16: [0, 3, 6, 9, 12, 15, 5, 2, 11, 14, 8, 4, 13, 1, 10, 7],
+      17: [0, 3, 6, 9, 1, 16, 13, 10, 7, 4, 15, 12, 2, 5, 8, 11, 14],
+      18: [0, 3, 6, 9, 1, 12, 16, 8, 13, 17, 4, 14, 7, 11, 2, 5, 15, 10],
+      19: [0, 3, 6, 9, 1, 12, 15, 18, 11, 2, 8, 5, 17, 14, 10, 7, 4, 16, 13],
+      20: [0, 3, 6, 9, 1, 12, 18, 15, 7, 19, 4, 16, 13, 8, 17, 11, 14, 2, 5, 10],
+      21: [0, 3, 6, 9, 1, 12, 4, 17, 20, 2, 15, 19, 8, 16, 13, 7, 10, 18, 5, 14, 11],
+      22: [20, 3, 7, 13, 21, 8, 4, 15, 19, 9, 2, 6, 16, 1, 10, 14, 5, 18, 12, 0, 17, 11],
+      23: [7, 10, 22, 6, 16, 13, 2, 9, 14, 20, 3, 15, 0, 8, 19, 12, 1, 17, 5, 11, 18, 4, 21],
+      24: [11, 15, 2, 23, 19, 3, 8, 17, 4, 22, 9, 14, 18, 7, 1, 12, 20, 5, 0, 10, 21, 13, 6, 16],
+      25: [14, 10, 0, 22, 8, 5, 12, 15, 23, 19, 9, 24, 4, 16, 7, 2, 18, 13, 6, 1, 21, 11, 17, 20, 3],
+      26: [2, 10, 19, 15, 11, 21, 25, 1, 6, 23, 14, 17, 8, 24, 13, 18, 3, 0, 7, 4, 20, 9, 12, 16, 5, 22],
+      27: [22, 14, 18, 4, 21, 12, 15, 6, 10, 2, 13, 5, 0, 17, 25, 20, 3, 23, 26, 8, 11, 16, 19, 9, 24, 1, 7],
+      28: [17, 13, 23, 9, 19, 2, 5, 15, 22, 7, 3, 21, 25, 16, 4, 11, 27, 24, 1, 20, 8, 26, 14, 10, 0, 6, 12, 18],
+      29: [25, 15, 21, 9, 5, 1, 13, 17, 2, 11, 27, 23, 16, 0, 19, 6, 24, 28, 4, 8, 12, 18, 22, 7, 14, 10, 3, 20, 26],
+      30: [25, 28, 19, 11, 2, 5, 18, 9, 26, 4, 13, 17, 3, 27, 21, 7, 29, 1, 14, 24, 0, 20, 15, 8, 12, 22, 16, 6, 10, 23],
+    };
+
+    const board = document.getElementById("board");
+    const log = document.getElementById("log");
+    const status = document.getElementById("status");
+    const peaceButton = document.getElementById("peace-button");
+
+    let stageIndex = 0;
+    let isRunning = false;
+    const loggedSizes = new Set();
+
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function canPlace(placed, row, column) {
+      return placed.every(([placedRow, placedColumn]) => {
+        const rowDistance = Math.abs(row - placedRow);
+        const columnDistance = Math.abs(column - placedColumn);
+        const queenAttack = row === placedRow || column === placedColumn || rowDistance === columnDistance;
+        const knightAttack = (rowDistance === 1 && columnDistance === 2) || (rowDistance === 2 && columnDistance === 1);
+        return !queenAttack && !knightAttack;
+      });
+    }
+
+    function solveMaxForBoard(size) {
+      if (FULL_BOARD_COLUMNS[size]) {
+        return FULL_BOARD_COLUMNS[size].map((column, row) => [row, column]);
+      }
+
+      let best = [];
+
+      function search(row, placed) {
+        if (row >= size) {
+          if (placed.length > best.length) {
+            best = placed.slice();
+          }
+          return;
+        }
+
+        if (placed.length + (size - row) <= best.length) {
+          return;
+        }
+
+        for (let column = 0; column < size; column += 1) {
+          if (canPlace(placed, row, column)) {
+            placed.push([row, column]);
+            search(row + 1, placed);
+            placed.pop();
+          }
+        }
+
+        search(row + 1, placed);
+      }
+
+      search(0, []);
+      return best;
+    }
+
+    function renderBoard(size, placements = [], placing = false) {
+      board.innerHTML = "";
+      board.style.gridTemplateColumns = `repeat(${size}, minmax(0, 1fr))`;
+      board.classList.toggle("placing", placing);
+
+      const occupied = new Set(placements.map(([row, column]) => `${row}:${column}`));
+
+      for (let row = 0; row < size; row += 1) {
+        for (let column = 0; column < size; column += 1) {
+          const square = document.createElement("div");
+          square.className = `square ${(row + column) % 2 === 0 ? "light" : "dark"}`;
+
+          if (occupied.has(`${row}:${column}`)) {
+            const emperor = document.createElement("span");
+            emperor.className = "emperor";
+            square.appendChild(emperor);
+          }
+
+          board.appendChild(square);
+        }
+      }
+    }
+
+    function addLog(size, count) {
+      if (loggedSizes.has(size)) {
+        return;
+      }
+
+      loggedSizes.add(size);
+      const entry = document.createElement("div");
+      entry.className = "log-entry";
+      entry.innerHTML = `<span><strong>${size}x${size}</strong></span><span>${count} emperors</span>`;
+      log.prepend(entry);
+    }
+
+    async function runStage() {
+      if (isRunning || stageIndex >= RUN_STAGES.length) {
+        return;
+      }
+
+      isRunning = true;
+      peaceButton.disabled = true;
+      const stage = RUN_STAGES[stageIndex];
+
+      for (let size = stage.start; size <= stage.end; size += 1) {
+        status.textContent = `Testing ${size}x${size}`;
+        renderBoard(size);
+        await sleep(size <= 10 ? 260 : 180);
+
+        const placements = solveMaxForBoard(size);
+        renderBoard(size, placements, true);
+        addLog(size, placements.length);
+        status.textContent = `${size}x${size} fits ${placements.length}`;
+        await sleep(size <= 10 ? 620 : 440);
+      }
+
+      stageIndex += 1;
+      isRunning = false;
+
+      peaceButton.textContent = stage.nextLabel;
+      if (stageIndex >= RUN_STAGES.length) {
+        peaceButton.disabled = true;
+        status.textContent = "Peace complete through 30x30";
+      } else {
+        peaceButton.disabled = false;
+      }
+    }
+
+    peaceButton.addEventListener("click", runStage);
+    renderBoard(1, [[0, 0]]);
+    addLog(1, 1);
+  </script>
+</body>
+</html>
